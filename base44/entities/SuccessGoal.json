@@ -1,1 +1,17 @@
-{ "name": "SuccessGoal", "type": "object", "properties": {} }
+{
+  "name": "SuccessGoal",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string" },
+    "title": { "type": "string" },
+    "category": { "type": "string", "enum": ["Financial", "Lifestyle", "Productivity", "Fitness"] },
+    "target_value": { "type": "number" },
+    "current_value": { "type": "number" },
+    "unit": { "type": "string" },
+    "progress_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+    "milestones": { "type": "array", "items": { "type": "string" } },
+    "proof_notes": { "type": "string" },
+    "status": { "type": "string", "enum": ["Pending", "In Progress", "Completed", "Archived"] }
+  },
+  "required": ["id", "title", "category", "target_value", "current_value", "unit", "progress_pct", "status"]
+}
