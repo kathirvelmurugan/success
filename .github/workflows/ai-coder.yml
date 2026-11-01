@@ -1,4 +1,4 @@
-name: Autonomous AI Coder
+name: Autonomous AI Coder (Gemini)
 
 on:
   issues:
@@ -39,11 +39,12 @@ jobs:
 
       - name: Install Aider
         run: |
+          python -m pip install --upgrade pip
           pip install aider-chat
 
-      - name: Run AI Coder on Issue
+      - name: Run AI Coder with Google Gemini
         env:
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
         run: |
@@ -57,8 +58,8 @@ jobs:
           3. DECISIONS LOG: Create or update a 'DECISIONS.md' file at the root. Document what was implemented, how the adapter file works, and how to run this on a private server.
           4. VALIDATION: Make sure the project compiles cleanly with no syntax or TypeScript errors."
 
-          # Run Aider autonomously
-          aider --model deepseek/deepseek-chat --yes-always --message "$PROMPT"
+          # Run Aider autonomously with Google Gemini
+          aider --model gemini/gemini-2.5-flash --yes-always --message "$PROMPT"
 
       - name: Verify Build
         run: |
