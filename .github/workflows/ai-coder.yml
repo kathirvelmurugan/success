@@ -1,0 +1,84 @@
+name: Autonomous AI Coder
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  code-and-deliver:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Existing Base44 Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Project Dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci || npm install
+          elif [ -f package.json ]; then
+            npm install
+          fi
+
+      - name: Setup Python for AI Coder
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Aider
+        run: |
+          pip install aider-chat
+
+      - name: Run AI Coder on Issue
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          git config --global user.name "Autonomous AI Coder"
+          git config --global user.email "ai-coder@github.actions"
+
+          # Formulate the comprehensive prompt
+          PROMPT="Task: $ISSUE_TITLE\n\nRequirements:\n$ISSUE_BODY\n\nARCHITECTURAL RULES:
+          1. Inspect the existing Base44 codebase structure first.
+          2. DECOUPLING RULE: Never hardcode platform-specific Base44 calls directly inside UI components. Put all data/API calls into a single adapter file (e.g., 'src/services/api.ts' or 'src/lib/backend.ts') so we can switch from Base44 to our own VPS/PostgreSQL later by editing just that one file.
+          3. DECISIONS LOG: Create or update a 'DECISIONS.md' file at the root. Document what was implemented, how the adapter file works, and how to run this on a private server.
+          4. VALIDATION: Make sure the project compiles cleanly with no syntax or TypeScript errors."
+
+          # Run Aider autonomously
+          aider --model deepseek/deepseek-chat --yes-always --message "$PROMPT"
+
+      - name: Verify Build
+        run: |
+          if npm run | grep -q "build"; then
+            npm run build
+          fi
+
+      - name: Push Changes to Main
+        run: |
+          git push origin HEAD:main
+
+      - name: Post Comment on Issue
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ job.status }}' === 'success' ? '✅ **Success!**' : '❌ **Failed!**';
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `${status} The AI Coder has finished processing your task.\n- Changes pushed to \`main\`\n- Architectural decisions documented in \`DECISIONS.md\``
+            });
