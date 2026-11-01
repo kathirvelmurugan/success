@@ -63,3 +63,23 @@ The dashboard will run on a private server by building the application (`npm run
 
 ### Validation:
 The project is expected to compile cleanly with `npm run build` after installing the new dependencies. The UI components are built using React and TypeScript (implicitly, as the project is JavaScript with TS files), and their integration into `Home.jsx` should not introduce syntax or TypeScript errors. The interactive elements (progress buttons, add goal form) are designed to persist changes via the `api` layer.
+
+## 2026-11-01 - Monolithic Life OS with Activity Logger, Relevance Ratio, and Drill-down Charts in Home.jsx
+
+### Implemented:
+1.  **`src/services/api.ts`**: The API adapter was extended to support `Activity` entities alongside `Goal` entities.
+    *   A new `Activity` interface was defined, including properties like `title`, `duration`, `category`, `is_relevant`, and `date`.
+    *   Separate local storage keys and seed data were added for activities, ensuring persistence during local development.
+    *   `base44Adapter` and `localStorageAdapter` were updated with `getActivities`, `createActivity`, `updateActivity`, and `deleteActivity` methods. The `base44Adapter` includes a warning and fallback if `base44.entities.SuccessActivity` is not defined, emphasizing the need for a corresponding Base44 entity definition in a production Base44 environment.
+    *   The exported `api` object now consolidates both goal and activity management functions.
+2.  **`src/pages/Home.jsx`**: (To be implemented in the next step, after these file changes are applied). This will transform `Home.jsx` into a comprehensive Life OS dashboard featuring an activity logger, live alignment gauge with confetti, drill-down analytics charts using Recharts, and life optimizer insights.
+3.  **Dependencies**: New dependencies (`framer-motion`, `canvas-confetti`, `recharts`, and potentially new `lucide-react` icons) will be required for the `Home.jsx` implementation.
+
+### Adapter File Strategy:
+The `src/services/api.ts` file continues to serve as the central, decoupled data access layer. By extending it to include activity management, `Home.jsx` (and any other UI components) can interact with both goals and activities through a unified interface, without directly accessing `window.base44` or `localStorage`. This adheres strictly to the Decoupling Rule, enabling a seamless transition to a custom VPS/PostgreSQL backend by modifying only `api.ts`.
+
+### Running on a Private Server:
+The `localStorage` fallbacks for both goals and activities ensure that the frontend application remains fully functional even when deployed on a private server without a Base44 backend. For a custom backend, `api.ts` would be updated to point to the new API endpoints for both goals and activities. The build and serving process remains the same (e.g., `npm run build` and serving static files).
+
+### Validation:
+The `Activity` TypeScript interface and the extended `api.ts` adapter are designed for clean compilation. `npm run build` is expected to pass without errors after these changes and the subsequent `Home.jsx` modifications (and new dependency installations).
